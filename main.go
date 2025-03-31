@@ -9,20 +9,22 @@ import (
 	"strconv"
 )
 
+func maskRadius[T any](mask [][]T) int {
+	return (len(mask) - 1) / 2
+}
+
 var (
-	maskX = [][]int{
+	sobelMaskX = [][]int{
 		{-1, 0, 1},
 		{-2, 0, 2},
 		{-1, 0, 1},
 	}
 
-	maskY = [][]int{
+	sobelMaskY = [][]int{
 		{1, 2, 1},
 		{0, 0, 0},
 		{-1, -2, -1},
 	}
-
-	maskRadius = (len(maskX) - 1) / 2
 )
 
 const (
@@ -73,7 +75,7 @@ func new2dSlice[T any](rows int, columns int) [][]T {
 	return slice
 }
 
-func applyMask[T number](image [][]T, mask [][]T) [][]T {
+func applyMask[T, U number](image [][]T, mask [][]U) [][]T {
 	maskRadius := (len(mask) - 1) / 2
 
 	output := new2dSlice[T](len(image), len(image))
@@ -89,7 +91,7 @@ func applyMask[T number](image [][]T, mask [][]T) [][]T {
 
 					imagePixel := image[imagePixelRowIdx][imagePixelColIdx]
 
-					output[maskCenterRowIdx][maskCenterColIdx] += imagePixel * maskPixel
+					output[maskCenterRowIdx][maskCenterColIdx] += imagePixel * T(maskPixel)
 
 				}
 			}
@@ -187,6 +189,73 @@ func isFlagPassed(name string) bool {
 	return found
 }
 
+func squaredSum(nums ...float64) float64 {
+	var sum float64 = 0
+
+	for _, num := range nums {
+		sum += math.Pow(num, 2)
+	}
+
+	return sum
+
+}
+
+func gaussian1stDerivMultiplePixels(sigma float64, nums ...float64) float64 {
+	exponentialPower := -(1 / (2 * math.Pow(sigma, 2))) * squaredSum(nums...)
+	exponentialPowerApplied := math.Pow(math.E, exponentialPower)
+	return nums[0] * exponentialPowerApplied
+}
+
+func sobelEdgeDetection(image [][]float64, useThreshold bool, threshold float64) [][]float64 {
+
+	// Calculate weighted sums for x and y direction for each pixel.
+	imageWeightedSumsX := applyMask(image, sobelMaskX)
+	imageWeightedSumsY := applyMask(image, sobelMaskY)
+
+	// Calculate euclidean distance and highest pixel value, based on image pixel direction differences.
+	var maxPixelValue float64
+	imageMagnitudeAbsolute := applyEuclideanDistanceImage(maskRadius(sobelMaskX), &maxPixelValue, imageWeightedSumsX, imageWeightedSumsY)
+
+	// Map image pixel values from [0-maxPixelValue] range to unit interval range.
+	imageMagnitudeUnitInterval := applyScaleImage(imageMagnitudeAbsolute, 1/maxPixelValue)
+
+	// Apply threshold to each pixel.
+	imageThresholded := imageMagnitudeUnitInterval
+	if useThreshold {
+		imageThresholded = applyThresholdImage(threshold, 1, imageThresholded)
+	}
+
+	return imageThresholded
+}
+
+func cannyEdgeHighLow(image [][]float64) (high float64, low float64) {
+	imagePgmScaled := applyScaleImage(image, 255)
+	imagePgmScaledInt := castNestedSlice[float64, int](imagePgmScaled)
+	histogram := [255]int{}
+
+	for _, row := range imagePgmScaledInt {
+		for _, pixel := range row {
+			histogram[pixel]++
+		}
+	}
+
+	var mostOccurredPixel int
+	for pixel, occurrence := range histogram {
+		if occurrence > histogram[mostOccurredPixel] {
+			mostOccurredPixel = pixel
+		}
+	}
+
+	high = float64(mostOccurredPixel) / 255
+	low = high * 0.35
+
+	return high, low
+}
+
+func cannyEdgeDetection(image [][]float64, sigma int) [][]float64 {
+	return [][]float64{}
+}
+
 func run() error {
 
 	var inputPath string
@@ -197,7 +266,12 @@ func run() error {
 
 	thresholdFlag := flag.String("threshold", "0", "minimum threshold for a pixel to be considered 'on'")
 
+	var sigma int
+	flag.IntVar(&sigma, "sigma", 0, "canny edge detection sigma")
+
 	flag.Parse()
+
+	useCannyEdgeDetection := isFlagPassed("sigma")
 
 	var threshold float64 = 0
 	useThreshold := isFlagPassed("threshold")
@@ -275,30 +349,22 @@ func run() error {
 		}
 	}
 
+	// Cast image from bytes to floats.
 	imageInputFloat := castNestedSlice[byte, float64](imageByte)
 
 	// Map image pixel values from the PGM format range to the unit interval range.
 	imageUnitInterval := applyScaleImage(imageInputFloat, 1/float64(imageInputMaxPixelVal))
 
-	// Calculate weighted sums for x and y direction for each pixel.
-	imageWeightedSumsX := applyMask(imageUnitInterval, castNestedSlice[int, float64](maskX))
-	imageWeightedSumsY := applyMask(imageUnitInterval, castNestedSlice[int, float64](maskY))
+	var imageDetectedEdges [][]float64
 
-	// Calculate euclidean distance and highest pixel value, based on image pixel direction differences.
-	var maxPixelValue float64
-	imageMagnitudeAbsolute := applyEuclideanDistanceImage(maskRadius, &maxPixelValue, imageWeightedSumsX, imageWeightedSumsY)
+	if useCannyEdgeDetection {
 
-	// Map image pixel values from [0-maxPixelValue] range to unit interval range.
-	imageMagnitudeUnitInterval := applyScaleImage(imageMagnitudeAbsolute, 1/maxPixelValue)
-
-	// Apply threshold to each pixel.
-	imageThresholded := imageMagnitudeUnitInterval
-	if useThreshold {
-		imageThresholded = applyThresholdImage(threshold, 1, imageThresholded)
+	} else {
+		imageDetectedEdges = sobelEdgeDetection(imageUnitInterval, useThreshold, threshold)
 	}
 
 	// Scale pixels from unit interval range to PGM pixel range.
-	imagePgmScaled := applyScaleImage(imageThresholded, 255)
+	imagePgmScaled := applyScaleImage(imageDetectedEdges, 255)
 
 	// Cast image pixels from floats into bytes.
 	outputImage := castNestedSlice[float64, byte](imagePgmScaled)
