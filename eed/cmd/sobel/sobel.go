@@ -6,8 +6,8 @@ import (
 	"strconv"
 
 	"github.com/spf13/cobra"
-	"github.com/thatpix3l/edd/cmd/shared"
-	"github.com/thatpix3l/edd/util"
+	"github.com/thatpix3l/eed/eed/cmd/shared"
+	"github.com/thatpix3l/eed/eed/util"
 )
 
 const (

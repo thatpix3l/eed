@@ -5,10 +5,10 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	"github.com/thatpix3l/edd/cmd/canny"
-	"github.com/thatpix3l/edd/cmd/shared"
-	"github.com/thatpix3l/edd/cmd/sobel"
-	"github.com/thatpix3l/edd/util"
+	"github.com/thatpix3l/eed/eed/cmd/canny"
+	"github.com/thatpix3l/eed/eed/cmd/shared"
+	"github.com/thatpix3l/eed/eed/cmd/sobel"
+	"github.com/thatpix3l/eed/eed/util"
 )
 
 var Root = &cobra.Command{

@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/thatpix3l/edd/cmd"
+	"github.com/thatpix3l/eed/eed/cmd"
 )
 
 func main() {

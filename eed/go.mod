@@ -1,4 +1,4 @@
-module github.com/thatpix3l/edd
+module github.com/thatpix3l/eed/eed
 
 go 1.23.4
 

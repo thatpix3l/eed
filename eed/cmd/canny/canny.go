@@ -5,7 +5,7 @@ import (
 	"math"
 
 	"github.com/spf13/cobra"
-	"github.com/thatpix3l/edd/util"
+	"github.com/thatpix3l/eed/eed/util"
 )
 
 const (
