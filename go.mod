@@ -1,4 +1,4 @@
-module github.com/thatpix3l/edge_detection
+module github.com/thatpix3l/edd
 
 go 1.23.4
 

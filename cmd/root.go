@@ -5,15 +5,15 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	"github.com/thatpix3l/edge_detection/cmd/canny"
-	"github.com/thatpix3l/edge_detection/cmd/shared"
-	"github.com/thatpix3l/edge_detection/cmd/sobel"
-	"github.com/thatpix3l/edge_detection/util"
+	"github.com/thatpix3l/edd/cmd/canny"
+	"github.com/thatpix3l/edd/cmd/shared"
+	"github.com/thatpix3l/edd/cmd/sobel"
+	"github.com/thatpix3l/edd/util"
 )
 
 var Root = &cobra.Command{
-	Use:                "fringe",
-	Short:              "Fringe is an edge detector and visualizer for PGM images.",
+	Use:                "edd",
+	Short:              "Elementary-Edge-Detection is an edge detector and visualizer for PGM images.",
 	PersistentPreRunE:  readInputImage,
 	PersistentPostRunE: writeOutputImage,
 }

@@ -5,7 +5,7 @@ import (
 	"math"
 
 	"github.com/spf13/cobra"
-	"github.com/thatpix3l/edge_detection/util"
+	"github.com/thatpix3l/edd/util"
 )
 
 const (
