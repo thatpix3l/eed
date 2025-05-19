@@ -2,26 +2,24 @@ VERSION 0.8
 
 FROM golang:1.23.4-alpine
 
-go-deps:
-    WORKDIR /go-workdir
+deps:
+    RUN mkdir /src
+    RUN mkdir /out
+    WORKDIR /src
     COPY eed/go.mod eed/go.sum ./
     RUN go mod download
     SAVE ARTIFACT go.mod AS LOCAL eed/go.mod
     SAVE ARTIFACT go.sum AS LOCAL eed/go.sum
 
-go-build:
-    FROM +go-deps
+build:
+    FROM +deps
     COPY eed .
     RUN go mod download
-    RUN mkdir -p build
-    RUN go build -o build/ .
-
-build:
-    FROM +go-build
+    RUN go build -o ../out/ .
 
 build-and-save:
     FROM +build
-    SAVE ARTIFACT build/* AS LOCAL ./
+    SAVE ARTIFACT /out AS LOCAL .
 
 eed-run-deps:
     FROM +build
