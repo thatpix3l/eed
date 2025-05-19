@@ -5,6 +5,7 @@
 </p>
 
 Input a source PGM image...:
+
 <img src="assets/garb34.png" />
 
 ...to produce the following:
